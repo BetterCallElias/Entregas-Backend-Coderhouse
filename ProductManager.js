@@ -1,24 +1,44 @@
+const fs = require('fs');
+
 class ProductManager {
-    constructor() {
+    constructor(filePath) {
+        this.path = filePath;
         this.products = [];
         this.productIdCounter = 1;
+        this.loadProductsFromFile();
+    }
+
+    loadProductsFromFile() {
+        try {
+            const data = fs.readFileSync(this.path, 'utf8');
+            this.products = JSON.parse(data);
+            const lastProduct = this.products[this.products.length - 1];
+            if (lastProduct) {
+                this.productIdCounter = lastProduct.id + 1;
+            }
+        } catch (error) {
+            this.products = [];
+        }
+    }
+
+    saveProductsToFile() {
+        const data = JSON.stringify(this.products, null, 2);
+        fs.writeFileSync(this.path, data);
     }
 
     addProduct(product) {
-        
         if (!product.title || !product.description || !product.price || !product.thumbnail || !product.code || !product.stock) {
             throw new Error("Todos los campos son obligatorios.");
         }
 
-        
         const existingProduct = this.products.find(p => p.code === product.code);
         if (existingProduct) {
             throw new Error(`El producto con código ${product.code} ya existe.`);
         }
 
-        
         product.id = this.productIdCounter++;
         this.products.push(product);
+        this.saveProductsToFile();
         console.log(`Producto agregado con id ${product.id}.`);
     }
 
@@ -33,16 +53,31 @@ class ProductManager {
         }
         return product;
     }
+
+    updateProduct(id, updatedFields) {
+        const productIndex = this.products.findIndex(p => p.id === id);
+        if (productIndex === -1) {
+            throw new Error("Producto no encontrado.");
+        }
+
+        this.products[productIndex] = { ...this.products[productIndex], ...updatedFields };
+        this.saveProductsToFile();
+    }
+
+    deleteProduct(id) {
+        const updatedProducts = this.products.filter(p => p.id !== id);
+        if (updatedProducts.length === this.products.length) {
+            throw new Error("Producto no encontrado.");
+        }
+
+        this.products = updatedProducts;
+        this.saveProductsToFile();
+    }
 }
 
+const productManager = new ProductManager('products.json');
 
-const productManager = new ProductManager();
-
-
-const initialProducts = productManager.getProducts();
-console.log("Productos iniciales:", initialProducts);
-
-
+// Ejemplo de uso
 try {
     productManager.addProduct({
         title: "producto prueba",
@@ -56,29 +91,20 @@ try {
     console.error("Error al agregar producto:", error.message);
 }
 
-
-const updatedProducts = productManager.getProducts();
-console.log("Productos actualizados:", updatedProducts);
-
+console.log("Productos:", productManager.getProducts());
 
 try {
-    productManager.addProduct({
-        title: "otro producto",
-        description: "Otro producto de prueba",
-        price: 150,
-        thumbnail: "Otra imagen",
-        code: "abc123", // Código repetido
-        stock: 30
-    });
+    productManager.updateProduct(1, { price: 250, stock: 30 });
 } catch (error) {
-    console.error("Error al agregar producto:", error.message);
+    console.error("Error al actualizar producto:", error.message);
 }
 
+console.log("Productos actualizados:", productManager.getProducts());
 
-const productIdToFind = 1;
 try {
-    const foundProduct = productManager.getProductById(productIdToFind);
-    console.log("Producto encontrado:", foundProduct);
+    productManager.deleteProduct(1);
 } catch (error) {
-    console.error("Error al buscar producto:", error.message);
+    console.error("Error al eliminar producto:", error.message);
 }
+
+console.log("Productos después de eliminar:", productManager.getProducts());
