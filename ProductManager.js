@@ -1,16 +1,15 @@
-const fs = require('fs');
+const fs = require('fs').promises;
 
 class ProductManager {
     constructor(filePath) {
         this.path = filePath;
         this.products = [];
         this.productIdCounter = 1;
-        this.loadProductsFromFile();
     }
 
-    loadProductsFromFile() {
+    async loadProductsFromFile() {
         try {
-            const data = fs.readFileSync(this.path, 'utf8');
+            const data = await fs.readFile(this.path, 'utf8');
             this.products = JSON.parse(data);
             const lastProduct = this.products[this.products.length - 1];
             if (lastProduct) {
@@ -21,9 +20,9 @@ class ProductManager {
         }
     }
 
-    saveProductsToFile() {
+    async saveProductsToFile() {
         const data = JSON.stringify(this.products, null, 2);
-        fs.writeFileSync(this.path, data);
+        await fs.writeFile(this.path, data);
     }
 
     addProduct(product) {
@@ -75,36 +74,4 @@ class ProductManager {
     }
 }
 
-const productManager = new ProductManager('products.json');
-
-// Ejemplo de uso
-try {
-    productManager.addProduct({
-        title: "producto prueba",
-        description: "Este es un producto prueba",
-        price: 200,
-        thumbnail: "Sin imagen",
-        code: "abc123",
-        stock: 25
-    });
-} catch (error) {
-    console.error("Error al agregar producto:", error.message);
-}
-
-console.log("Productos:", productManager.getProducts());
-
-try {
-    productManager.updateProduct(1, { price: 250, stock: 30 });
-} catch (error) {
-    console.error("Error al actualizar producto:", error.message);
-}
-
-console.log("Productos actualizados:", productManager.getProducts());
-
-try {
-    productManager.deleteProduct(1);
-} catch (error) {
-    console.error("Error al eliminar producto:", error.message);
-}
-
-console.log("Productos después de eliminar:", productManager.getProducts());
+module.exports = ProductManager;
