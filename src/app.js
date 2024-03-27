@@ -6,13 +6,14 @@ const port = 3000;
 
 const productManager = new ProductManager('products.json');
 
-// Middleware para manejar errores
+
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).send('Error interno del servidor');
 });
 
-// Ruta para obtener todos los productos con un límite opcional
+
+
 app.get('/products', async (req, res, next) => {
     try {
         await productManager.loadProductsFromFile();
@@ -27,7 +28,8 @@ app.get('/products', async (req, res, next) => {
     }
 });
 
-// Ruta para obtener un producto por su ID
+
+
 app.get('/products/:pid', async (req, res, next) => {
     try {
         await productManager.loadProductsFromFile();
@@ -39,7 +41,8 @@ app.get('/products/:pid', async (req, res, next) => {
     }
 });
 
-// Iniciar el servidor
+
+
 app.listen(port, () => {
     console.log(`Servidor escuchando en http://localhost:${port}`);
 });
