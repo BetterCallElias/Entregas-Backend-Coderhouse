@@ -2,7 +2,7 @@ const express = require('express');
 const ProductManager = require('./ProductManager');
 
 const app = express();
-const port = 3000;
+const port = 8080;
 
 const productManager = new ProductManager('products.json');
 
