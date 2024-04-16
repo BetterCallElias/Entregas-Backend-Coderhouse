@@ -1,16 +1,6 @@
 const express = require('express');
 const router = express.Router();
-
-
-const {
-  readProducts,
-  findProductById,
-  generateProductId,
-  addProduct,
-  updateProduct,
-  deleteProduct,
-} = require('../utils/products');
-
+const { readProducts, findProductById, generateProductId, addProduct, updateProduct, deleteProduct } = require('../utils/products');
 
 router.get('/', async (req, res) => {
   const products = await readProducts();

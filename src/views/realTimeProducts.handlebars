@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real Time Products</title>
+</head>
+<body>
+    <h1>Listado de productos en tiempo real</h1>
+    <ul id="productList">
+        <!-- Lista de productos se actualiza automáticamente con WebSocket -->
+    </ul>
+
+    <!-- Formulario para agregar o eliminar productos -->
+    <form id="productForm">
+        <input type="text" name="productName" placeholder="Nombre del producto">
+        <input type="text" name="productDescription" placeholder="Descripción del producto">
+        <input type="number" name="productPrice" placeholder="Precio del producto">
+        <button type="submit">Agregar Producto</button>
+    </form>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        socket.on('updateProducts', () => {
+            fetchProducts();
+        });
+
+        async function fetchProducts() {
+            const response = await fetch('/api/products');
+            const products = await response.json();
+
+            const productList = document.getElementById('productList');
+            productList.innerHTML = '';
+
+            products.forEach(product => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${product.nombre} - ${product.descripcion} - ${product.precio}`;
+                productList.appendChild(listItem);
+            });
+        }
+
+        document.getElementById('productForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const productName = document.querySelector('input[name="productName"]').value;
+            const productDescription = document.querySelector('input[name="productDescription"]').value;
+            const productPrice = document.querySelector('input[name="productPrice"]').value;
+
+            const response = await fetch('/api/products', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    nombre: productName,
+                    descripcion: productDescription,
+                    precio: productPrice
+                })
+            });
+
+            if (response.ok) {
+                socket.emit('newProduct');
+            }
+        });
+
+        fetchProducts();
+    </script>
+</body>
+</html>

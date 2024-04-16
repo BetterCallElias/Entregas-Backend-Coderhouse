@@ -1,18 +1,7 @@
 const express = require('express');
 const router = express.Router();
-
-
-const {
-  readCarts,
-  findCartById,
-  generateCartId,
-  addCart,
-  updateCart,
-} = require('../utils/carts');
-
-
+const { readCarts, findCartById, generateCartId, addCart, updateCart } = require('../utils/carts');
 const { findProductById } = require('../utils/products');
-
 
 router.post('/', async (req, res) => {
   const newCart = {
@@ -49,7 +38,6 @@ router.post('/:cid/product/:pid', async (req, res) => {
         cart.products.push({ product: String(pid), quantity: 1 }); // Convertir pid a string
       }
 
-      
       await updateCart(cid, cart);
 
       res.json(cart.products);
