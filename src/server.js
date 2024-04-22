@@ -3,45 +3,70 @@ const http = require('http');
 const socketIo = require('socket.io');
 const exphbs = require('express-handlebars');
 const path = require('path');
-const bodyParser = require('body-parser');
+const { readProducts, addProduct, deleteProduct } = require('./utils/products');
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-// Configuración del motor de plantillas Handlebars (corregida)
+
 app.engine('handlebars', exphbs.create({
   defaultLayout: 'main'
 }));
 app.set('view engine', 'handlebars');
 app.set('views', path.join(__dirname, 'views'));
 
-// Middleware para parsear el cuerpo de las solicitudes
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Middleware para servir archivos estáticos
+
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Ruta raíz
+
 app.get('/', (req, res) => {
-  res.render('home'); // Renderiza la vista home.handlebars
+  res.render('home'); 
 });
 
-// Rutas para productos y carritos (asumiendo que existen archivos routes/products.js y routes/carts.js)
-const productsRouter = require('./routes/products');
-const cartsRouter = require('./routes/carts');
-app.use('/api/products', productsRouter);
-app.use('/api/carts', cartsRouter);
 
-// Manejo de conexiones WebSocket
+app.get('/realTimeProducts', (req, res) => {
+  res.render('realTimeProducts');
+});
+
+
 io.on('connection', (socket) => {
   console.log('Cliente conectado');
 
-  // Manejo de eventos y lógica de comunicación WebSocket
 
+  fetchProducts().then(products => {
+    socket.emit('updateProducts', products);
+  }).catch(error => {
+    console.error('Error al obtener productos:', error);
+  });
+
+
+  socket.on('addProduct', async (product) => {
+    try {
+      await addProduct(product);
+      const updatedProducts = await readProducts();
+      io.emit('updateProducts', updatedProducts);
+    } catch (error) {
+      console.error('Error al agregar producto:', error);
+    }
+  });
+
+
+  socket.on('deleteProduct', async (productId) => {
+    try {
+      await deleteProduct(productId);
+      const updatedProducts = await readProducts();
+      io.emit('updateProducts', updatedProducts);
+    } catch (error) {
+      console.error('Error al eliminar producto:', error);
+    }
+  });
 });
 
-// Iniciar el servidor
+
 const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => console.log(`Servidor escuchando en el puerto ${PORT}`));
